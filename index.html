@@ -1,0 +1,1664 @@
+ 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 DNA 염기쌍 학습 시뮬레이션</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 50%, #0d2137 100%);
+            min-height: 100vh;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            color: white;
+            overflow-x: hidden;
+            font-size: 17px;
+        }
+
+        /* ══ 헤더 ══ */
+        header {
+            text-align: center;
+            padding: 28px 20px 18px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        header h1 {
+            font-size: 2.6em;
+            background: linear-gradient(90deg, #00f5ff, #ff6b9d, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        header p {
+            color: rgba(255,255,255,0.7);
+            margin-top: 8px;
+            font-size: 1.1em;
+        }
+
+        /* ══ 빨간 밑줄 강조 클래스 ══ */
+        .red-underline {
+            text-decoration: underline;
+            text-decoration-color: #ff3333;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .red-underline-light {
+            text-decoration: underline;
+            text-decoration-color: #ff5555;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+
+        /* ══ 중요 문장 강조 박스 ══ */
+        .important-box {
+            border-left: 4px solid #ff3333;
+            background: rgba(255, 50, 50, 0.1);
+            border-radius: 0 10px 10px 0;
+            padding: 10px 14px;
+            margin: 8px 0;
+            font-size: 1em;
+            line-height: 1.75;
+            color: white;
+        }
+        .important-box .imp-label {
+            color: #ff5555;
+            font-weight: bold;
+            font-size: 0.88em;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* ══ 진도 바 ══ */
+        .progress-bar-wrap {
+            background: rgba(0,0,0,0.3);
+            padding: 9px 30px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.65);
+        }
+        .progress-bar-bg {
+            flex: 1;
+            height: 9px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f5ff, #c084fc);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* ══ 레이아웃 ══ */
+        .main-wrap {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1550px;
+            margin: 0 auto;
+        }
+
+        /* ══ 패널 공통 ══ */
+        .panel {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+        .panel-title {
+            font-size: 1em;
+            color: #00f5ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0,245,255,0.25);
+            padding-bottom: 9px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-weight: bold;
+        }
+
+        /* ══ 왼쪽 패널 ══ */
+        .left-panel { width: 290px; flex-shrink: 0; }
+
+        /* 염기 버튼 */
+        .base-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+        .base-btn {
+            border: none;
+            border-radius: 15px;
+            padding: 18px 8px;
+            cursor: pointer;
+            font-size: 1.9em;
+            font-weight: 900;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+        }
+        .base-btn .bname { font-size: 0.4em; font-weight: 600; opacity: 0.95; }
+        .base-btn .btype { font-size: 0.32em; font-weight: 400; opacity: 0.75; }
+        .base-btn:hover  { transform: translateY(-5px) scale(1.07); }
+        .base-btn:active { transform: scale(0.96); }
+        .base-btn.sel    { box-shadow: 0 0 26px 5px rgba(255,255,255,0.45); transform: scale(1.09); }
+        .btn-A { background: linear-gradient(135deg,#ff6b6b,#ee5a24); color:white; }
+        .btn-T { background: linear-gradient(135deg,#ffd32a,#f79f1f); color:#222; }
+        .btn-G { background: linear-gradient(135deg,#0be881,#05c46b); color:#222; }
+        .btn-C { background: linear-gradient(135deg,#485aff,#3c40c4); color:white; }
+
+        .sel-indicator {
+            margin-top: 11px;
+            text-align: center;
+            padding: 11px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            font-size: 1em;
+            color: rgba(255,255,255,0.45);
+            transition: all 0.3s;
+        }
+        .sel-indicator.on {
+            background: rgba(0,245,255,0.08);
+            border: 1px solid rgba(0,245,255,0.35);
+            color: white;
+        }
+
+        /* ══ 염기 정보 카드 ══ */
+        .base-desc-card {
+            padding: 13px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            min-height: 90px;
+        }
+        .desc-row {
+            display: flex;
+            gap: 9px;
+            align-items: flex-start;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            font-size: 0.97em;
+            line-height: 1.75;
+        }
+        .desc-row:last-child { border-bottom: none; }
+        .desc-icon { font-size: 1.2em; flex-shrink: 0; margin-top: 2px; }
+        .desc-text { color: rgba(255,255,255,0.85); }
+        .desc-text strong { color: white; }
+        .hl-box {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            padding: 1px 7px;
+            font-size: 0.95em;
+        }
+
+        /* ══ 규칙 아이템 ══ */
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 12px;
+            border-radius: 11px;
+            margin-bottom: 8px;
+            font-size: 1em;
+            background: rgba(255,255,255,0.05);
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            line-height: 1.5;
+        }
+        .rule-item.at  { border-left-color: #ff6b6b; }
+        .rule-item.gc  { border-left-color: #0be881; }
+        .rule-item.lit {
+            background: rgba(255,255,255,0.12);
+            transform: translateX(5px);
+            border-left-width: 5px;
+        }
+        .rule-bonds {
+            margin-left: auto;
+            font-size: 0.85em;
+            padding: 3px 9px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ══ 중앙 패널 ══ */
+        .center-panel { flex: 1; min-width: 0; }
+
+        .canvas-wrap {
+            background: rgba(0,0,0,0.35);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.09);
+            overflow: hidden;
+            position: relative;
+        }
+        canvas { display: block; width: 100%; }
+
+        .ctrl-row {
+            display: flex;
+            gap: 9px;
+            margin-top: 13px;
+            flex-wrap: wrap;
+        }
+        .ctrl-btn {
+            flex: 1;
+            min-width: 95px;
+            padding: 11px 7px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.07);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+        .ctrl-btn:hover { background: rgba(255,255,255,0.16); transform: translateY(-2px); }
+        .ctrl-btn.blue  { border-color: rgba(0,245,255,0.38); }
+        .ctrl-btn.blue:hover  { background: rgba(0,245,255,0.13); }
+        .ctrl-btn.red   { border-color: rgba(255,100,100,0.38); }
+        .ctrl-btn.red:hover   { background: rgba(255,80,80,0.2); }
+        .ctrl-btn.green { border-color: rgba(11,232,129,0.38); }
+        .ctrl-btn.green:hover { background: rgba(11,232,129,0.13); }
+
+        /* ══ 단계 설명 박스 ══ */
+        .step-box {
+            background: rgba(0,245,255,0.07);
+            border: 1px solid rgba(0,245,255,0.24);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-top: 13px;
+            line-height: 1.8;
+        }
+        .step-box .step-title {
+            font-weight: bold;
+            color: #00f5ff;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        .step-box p { color: rgba(255,255,255,0.85); font-size: 1em; }
+
+        /* ══ 사용방법 ══ */
+        .guide-steps { display: flex; flex-direction: column; gap: 9px; margin-top: 11px; }
+        .guide-step {
+            display: flex;
+            gap: 11px;
+            align-items: flex-start;
+            font-size: 0.97em;
+            padding: 10px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+        }
+        .gs-num {
+            width: 24px; height: 24px;
+            background: linear-gradient(135deg,#00f5ff,#c084fc);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.88em;
+            flex-shrink: 0;
+            color: #0a0a2e;
+        }
+        .gs-text { color: rgba(255,255,255,0.82); line-height: 1.6; }
+
+        /* ══ 오른쪽 패널 ══ */
+        .right-panel { width: 305px; flex-shrink: 0; }
+
+        /* 염기쌍 시각화 */
+        .pair-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0 10px;
+        }
+        .pair-row {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+        .pair-base {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: 900;
+            box-shadow: 0 4px 22px rgba(0,0,0,0.4);
+        }
+        .h-bonds-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+        }
+        .h-bond-line {
+            width: 44px; height: 6px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #00f5ff, #c084fc);
+            animation: glow-b 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes glow-b {
+            from { box-shadow: 0 0 4px rgba(0,245,255,0.4); }
+            to   { box-shadow: 0 0 14px rgba(192,132,252,0.9); }
+        }
+        .pair-label {
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        .pair-label strong { color: #c084fc; }
+
+        /* 수소결합 설명 */
+        .bond-explain {
+            background: rgba(192,132,252,0.1);
+            border: 1px solid rgba(192,132,252,0.28);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.95em;
+            line-height: 1.75;
+            margin-top: 9px;
+            color: rgba(255,255,255,0.82);
+            display: none;
+        }
+        .bond-explain .be-title {
+            color: #c084fc;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+
+        /* ══ 통계 카드 ══ */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+        .stat-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 13px;
+            text-align: center;
+        }
+        .stat-card .sv { font-size: 1.9em; font-weight: 900; }
+        .stat-card .sl { font-size: 0.82em; color: rgba(255,255,255,0.48); margin-top: 3px; }
+        .stat-A .sv { color: #ff6b6b; }
+        .stat-T .sv { color: #ffd32a; }
+        .stat-G .sv { color: #0be881; }
+        .stat-C .sv { color: #7b8dff; }
+        .stat-tot .sv { color: #00f5ff; }
+        .stat-gc  .sv { color: #c084fc; }
+
+        /* 서열 */
+        .seq-box {
+            background: rgba(0,0,0,0.25);
+            border-radius: 11px;
+            padding: 11px 13px;
+            margin-top: 11px;
+        }
+        .seq-label { font-size: 0.82em; color: rgba(255,255,255,0.38); margin-bottom: 5px; }
+        .seq-text  {
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            word-break: break-all;
+            min-height: 26px;
+            line-height: 1.65;
+        }
+
+        /* 샤가프 */
+        .chargaff-box {
+            margin-top: 11px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 11px;
+            padding: 11px 13px;
+            font-size: 0.93em;
+            line-height: 1.7;
+        }
+        .chargaff-title {
+            color: #ffd32a;
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+
+        /* ══ 탭 ══ */
+        .tabs-row { display: flex; gap: 6px; margin-bottom: 13px; }
+        .tab-btn {
+            flex: 1;
+            padding: 9px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+        .tab-btn.on {
+            background: rgba(0,245,255,0.13);
+            border-color: rgba(0,245,255,0.4);
+            color: #00f5ff;
+        }
+        .tab-body { display: none; }
+        .tab-body.on { display: block; }
+
+        /* ══ 퀴즈 ══ */
+        .quiz-q {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1em;
+            line-height: 1.7;
+            margin-bottom: 11px;
+        }
+        .quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+        .q-opt {
+            padding: 11px 13px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.95em;
+            text-align: left;
+            transition: all 0.25s;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+        .q-opt:hover   { background: rgba(255,255,255,0.14); }
+        .q-opt.correct { background: rgba(11,232,129,0.22); border-color:#0be881; }
+        .q-opt.wrong   { background: rgba(255,80,80,0.2); border-color:#ff6b6b; }
+        .quiz-exp {
+            background: rgba(0,245,255,0.07);
+            border-left: 4px solid #ff3333;
+            border-radius: 0 10px 10px 0;
+            padding: 12px 13px;
+            font-size: 0.95em;
+            line-height: 1.75;
+            margin-top: 9px;
+            color: rgba(255,255,255,0.82);
+            display: none;
+        }
+        .quiz-score-bar {
+            text-align: center;
+            font-size: 1em;
+            color: #c084fc;
+            margin: 8px 0;
+            font-weight: bold;
+        }
+
+        /* ══ 학습 노트 ══ */
+        .note-item {
+            padding: 11px 13px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 9px;
+            font-size: 0.97em;
+            line-height: 1.8;
+            border-left: 4px solid #00f5ff;
+            color: rgba(255,255,255,0.82);
+        }
+        .note-item .nt {
+            font-weight: bold;
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #00f5ff;
+        }
+        .note-item.purple { border-left-color: #c084fc; }
+        .note-item.purple .nt { color: #c084fc; }
+        .note-item.green  { border-left-color: #0be881; }
+        .note-item.green  .nt { color: #0be881; }
+        .note-item.yellow { border-left-color: #ffd32a; }
+        .note-item.yellow .nt { color: #ffd32a; }
+        .note-item.red    { border-left-color: #ff4444; }
+        .note-item.red    .nt { color: #ff6666; }
+
+        /* ══ 모달 ══ */
+        .modal-bg {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(7px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-bg.show { display: flex; }
+        .modal-box {
+            background: linear-gradient(145deg,#1a1a4e,#0d2137);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 26px;
+            padding: 38px;
+            max-width: 560px;
+            width: 93%;
+            animation: pop-in 0.4s cubic-bezier(.34,1.56,.64,1);
+            position: relative;
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        @keyframes pop-in {
+            from { transform: scale(0.5) translateY(60px); opacity:0; }
+            to   { transform: scale(1) translateY(0); opacity:1; }
+        }
+        .modal-close {
+            position: absolute; top:15px; right:20px;
+            background: none; border: none;
+            color: rgba(255,255,255,0.45);
+            font-size: 1.9em; cursor: pointer; transition: color 0.2s;
+        }
+        .modal-close:hover { color: white; }
+        .modal-icon  { font-size: 5em; text-align: center; margin-bottom: 10px; }
+        .modal-title { text-align: center; font-size: 1.7em; margin-bottom: 22px; }
+        .modal-section { margin-bottom: 20px; }
+        .modal-section-title {
+            font-size: 0.9em;
+            color: #00f5ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(0,245,255,0.22);
+        }
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+        .modal-cell {
+            background: rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+        .modal-cell .mc-label { font-size: 0.8em; color:rgba(255,255,255,0.45); margin-bottom:5px; }
+        .modal-cell .mc-val   { font-size: 1.1em; font-weight: bold; }
+
+        /* 모달 설명 (중요 문장 빨간줄 포함) */
+        .modal-desc {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 0.97em;
+            line-height: 1.85;
+            color: rgba(255,255,255,0.83);
+        }
+        .modal-desc p { margin-bottom: 10px; }
+        .modal-desc p:last-child { margin-bottom: 0; }
+
+        /* 비교표 */
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93em;
+        }
+        .compare-table th {
+            background: rgba(0,245,255,0.1);
+            color: #00f5ff;
+            padding: 9px 11px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,245,255,0.22);
+        }
+        .compare-table td {
+            padding: 8px 11px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.8);
+        }
+        .compare-table tr:hover td { background: rgba(255,255,255,0.05); }
+
+        /* 태그 */
+        .tag {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 7px;
+            font-size: 0.88em;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .tag-purine { background:rgba(11,232,129,0.2); color:#0be881; border:1px solid #0be881; }
+        .tag-pyrim  { background:rgba(255,107,157,0.2); color:#ff6b9d; border:1px solid #ff6b9d; }
+
+        /* ══ 토스트 ══ */
+        .toast {
+            position: fixed; bottom:30px; left:50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(10,10,46,0.93);
+            border: 1px solid rgba(0,245,255,0.38);
+            color: white;
+            padding: 13px 26px;
+            border-radius: 30px;
+            font-size: 1em;
+            transition: transform 0.38s cubic-bezier(.34,1.56,.64,1);
+            z-index: 2000;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ══ 반응형 ══ */
+        @media (max-width: 1150px) {
+            .main-wrap { flex-direction: column; }
+            .left-panel, .right-panel { width: 100%; }
+        }
+        @media (max-width: 640px) {
+            body { font-size: 15px; }
+            header h1 { font-size: 1.7em; }
+            .main-wrap { padding: 10px; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ 헤더 ══════════ -->
+<header>
+    <h1>🧬 DNA 염기쌍 학습 시뮬레이션</h1>
+    <p>고등학교 1학년 생명과학 | 염기를 클릭해서 DNA 이중 나선을 완성해보세요!</p>
+</header>
+<div class="progress-bar-wrap">
+    <span>학습 진도</span>
+    <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <span id="progressTxt">0 / 18 염기쌍</span>
+</div>
+
+<!-- ══════════ 본문 ══════════ -->
+<div class="main-wrap">
+
+    <!-- ════ 왼쪽 ════ -->
+    <div class="left-panel">
+
+        <!-- 염기 선택 -->
+        <div class="panel">
+            <div class="panel-title">🔬 염기 선택 (클릭하여 추가)</div>
+            <div class="base-grid">
+                <button class="base-btn btn-A" id="btn-A" onclick="selectBase('A')">
+                    A <span class="bname">아데닌</span><span class="btype">퓨린</span>
+                </button>
+                <button class="base-btn btn-T" id="btn-T" onclick="selectBase('T')">
+                    T <span class="bname">타이민</span><span class="btype">피리미딘</span>
+                </button>
+                <button class="base-btn btn-G" id="btn-G" onclick="selectBase('G')">
+                    G <span class="bname">구아닌</span><span class="btype">퓨린</span>
+                </button>
+                <button class="base-btn btn-C" id="btn-C" onclick="selectBase('C')">
+                    C <span class="bname">사이토신</span><span class="btype">피리미딘</span>
+                </button>
+            </div>
+            <div class="sel-indicator" id="selInd">← 위에서 염기를 선택하세요</div>
+        </div>
+
+        <!-- 염기 정보 -->
+        <div class="panel">
+            <div class="panel-title">📖 선택한 염기 정보</div>
+            <div class="base-desc-card" id="baseDesc">
+                <div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px 0;font-size:1em;">
+                    염기를 선택하면<br>자세한 설명이 나타납니다
+                </div>
+            </div>
+            <button class="ctrl-btn blue" style="width:100%;margin-top:11px;" onclick="openModal()">
+                🔍 더 자세히 보기
+            </button>
+        </div>
+
+        <!-- 상보 규칙 -->
+        <div class="panel">
+            <div class="panel-title">🔗 상보적 염기쌍 규칙</div>
+
+            <!-- 중요 안내 -->
+            <div class="important-box">
+                <span class="imp-label">⭐ 핵심 규칙 (반드시 암기!)</span>
+                <span class="red-underline">A는 반드시 T와만 결합</span>하고,
+                <span class="red-underline">G는 반드시 C와만 결합</span>합니다.
+                이를 <strong>상보적 염기쌍</strong>이라고 합니다.
+            </div>
+
+            <div style="margin-top:11px;">
+                <div class="rule-item at" id="rule-AT">
+                    <span>🔴</span>
+                    <div><strong>A</strong> (아데닌) ↔ <strong>T</strong> (타이민)</div>
+                    <span class="rule-bonds">H결합 2개</span>
+                </div>
+                <div class="rule-item at" id="rule-TA">
+                    <span>🟡</span>
+                    <div><strong>T</strong> (타이민) ↔ <strong>A</strong> (아데닌)</div>
+                    <span class="rule-bonds">H결합 2개</span>
+                </div>
+                <div class="rule-item gc" id="rule-GC">
+                    <span>🟢</span>
+                    <div><strong>G</strong> (구아닌) ↔ <strong>C</strong> (사이토신)</div>
+                    <span class="rule-bonds">H결합 3개</span>
+                </div>
+                <div class="rule-item gc" id="rule-CG">
+                    <span>🔵</span>
+                    <div><strong>C</strong> (사이토신) ↔ <strong>G</strong> (구아닌)</div>
+                    <span class="rule-bonds">H결합 3개</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ════ 중앙 ════ -->
+    <div class="center-panel">
+
+        <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="dnaCanvas"></canvas>
+        </div>
+
+        <div class="ctrl-row">
+            <button class="ctrl-btn blue"  onclick="addRandom()">🎲 랜덤 추가</button>
+            <button class="ctrl-btn green" onclick="autoFill()">⚡ 자동 완성</button>
+            <button class="ctrl-btn"       onclick="toggleAnim()">⏸ 애니메이션</button>
+            <button class="ctrl-btn"       onclick="toggleView()">🔄 뷰 전환</button>
+            <button class="ctrl-btn red"   onclick="clearAll()">🗑 초기화</button>
+        </div>
+
+        <!-- 현재 단계 설명 -->
+        <div class="step-box" id="stepBox">
+            <div class="step-title">💡 지금 무슨 일이 일어나고 있나요?</div>
+            <p id="stepDesc">
+                왼쪽에서 염기(A, T, G, C 중 하나)를 클릭하면,
+                <span class="red-underline">상보적 염기가 자동으로 반대 가닥에 결합</span>하여
+                DNA 이중 나선이 만들어집니다.
+                <span class="red-underline">수소결합(H-bond)이 두 가닥을 연결</span>합니다.
+            </p>
+        </div>
+
+        <!-- 사용 방법 -->
+        <div class="panel" style="margin-top:13px;">
+            <div class="panel-title">📋 사용 방법</div>
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <div class="gs-num">1</div>
+                    <div class="gs-text">왼쪽에서 <strong>A, T, G, C 중 하나</strong>를 클릭하세요.</div>
+                </div>
+                <div class="guide-step">
+                    <div class="gs-num">2</div>
+                    <div class="gs-text">
+                        <span class="red-underline-light">상보적 염기가 자동으로 반대 가닥에 결합</span>됩니다.
+                        (A↔T, G↔C)
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="gs-num">3</div>
+                    <div class="gs-text">
+                        두 염기 사이의 <span class="red-underline-light">점선은 수소결합</span>을 나타냅니다.
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="gs-num">4</div>
+                    <div class="gs-text">오른쪽 패널에서 <strong>통계, 퀴즈, 학습 노트</strong>를 확인하세요.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ════ 오른쪽 ════ -->
+    <div class="right-panel">
+
+        <!-- 현재 염기쌍 -->
+        <div class="panel">
+            <div class="panel-title">🔗 현재 생성된 염기쌍</div>
+            <div class="pair-visual" id="pairVisual">
+                <p style="color:rgba(255,255,255,0.3);font-size:0.97em;text-align:center;padding:18px 0;">
+                    염기를 추가하면<br>쌍이 시각화됩니다
+                </p>
+            </div>
+            <div class="bond-explain" id="bondExplain"></div>
+        </div>
+
+        <!-- 탭 패널 -->
+        <div class="panel">
+            <div class="tabs-row">
+                <button class="tab-btn on" onclick="switchTab('stats',this)">📊 통계</button>
+                <button class="tab-btn"    onclick="switchTab('quiz',this)">❓ 퀴즈</button>
+                <button class="tab-btn"    onclick="switchTab('notes',this)">📝 노트</button>
+            </div>
+
+            <!-- ── 통계 탭 ── -->
+            <div class="tab-body on" id="tab-stats">
+                <div class="stat-grid">
+                    <div class="stat-card stat-A">
+                        <div class="sv" id="s-A">0</div>
+                        <div class="sl">아데닌 A</div>
+                    </div>
+                    <div class="stat-card stat-T">
+                        <div class="sv" id="s-T">0</div>
+                        <div class="sl">타이민 T</div>
+                    </div>
+                    <div class="stat-card stat-G">
+                        <div class="sv" id="s-G">0</div>
+                        <div class="sl">구아닌 G</div>
+                    </div>
+                    <div class="stat-card stat-C">
+                        <div class="sv" id="s-C">0</div>
+                        <div class="sl">사이토신 C</div>
+                    </div>
+                    <div class="stat-card stat-tot">
+                        <div class="sv" id="s-tot">0</div>
+                        <div class="sl">총 염기쌍</div>
+                    </div>
+                    <div class="stat-card stat-gc">
+                        <div class="sv" id="s-gc">0%</div>
+                        <div class="sl">GC 함량</div>
+                    </div>
+                </div>
+
+                <div class="seq-box">
+                    <div class="seq-label">5′ → 3′ 방향 (주형 가닥)</div>
+                    <div class="seq-text" id="seqTop">—</div>
+                    <div class="seq-label" style="margin-top:8px;">3′ → 5′ 방향 (상보 가닥)</div>
+                    <div class="seq-text" id="seqBot">—</div>
+                </div>
+
+                <div class="chargaff-box">
+                    <div class="chargaff-title">📐 샤가프 규칙 실시간 확인</div>
+                    <div id="chargaff" style="font-family:monospace;font-size:0.97em;line-height:1.8;color:rgba(255,255,255,0.75);">
+                        — 염기를 추가하면 확인됩니다
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 퀴즈 탭 ── -->
+            <div class="tab-body" id="tab-quiz">
+                <div class="quiz-score-bar" id="qScore">점수: 0 / 0</div>
+                <div class="quiz-q" id="qText">
+                    아래 버튼을 눌러 퀴즈를 시작하세요!<br>
+                    총 10문제가 준비되어 있습니다.
+                </div>
+                <div class="quiz-opts" id="qOpts"></div>
+                <div class="quiz-exp"  id="qExp"></div>
+                <button class="ctrl-btn blue" onclick="nextQuiz()" style="width:100%;margin-top:11px;">
+                    🎯 다음 문제
+                </button>
+            </div>
+
+            <!-- ── 학습 노트 탭 ── -->
+            <div class="tab-body" id="tab-notes">
+
+                <div class="note-item">
+                    <div class="nt">📌 DNA란?</div>
+                    <span class="red-underline">디옥시리보핵산(Deoxyribonucleic acid)</span>으로,
+                    유전 정보를 저장하는 분자입니다.
+                    두 가닥의 폴리뉴클레오타이드가 <strong>이중 나선 구조</strong>를 이룹니다.
+                </div>
+
+                <div class="note-item green">
+                    <div class="nt">🧪 4가지 염기의 분류</div>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">퓨린(이중 고리)</span>:
+                    <strong>A (아데닌), G (구아닌)</strong><br>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">피리미딘(단일 고리)</span>:
+                    <strong>T (타이민), C (사이토신)</strong>
+                </div>
+
+                <div class="note-item purple">
+                    <div class="nt">🔗 상보적 결합 (★ 시험 필수!)</div>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">A — T : 수소결합 2개</span><br>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">G — C : 수소결합 3개 → 더 안정적!</span>
+                </div>
+
+                <div class="note-item yellow">
+                    <div class="nt">📐 샤가프의 규칙 (★ 시험 필수!)</div>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">A의 수 = T의 수 (A = T)</span><br>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">G의 수 = C의 수 (G = C)</span><br>
+                    퓨린(A+G) 합계 = 피리미딘(T+C) 합계
+                </div>
+
+                <div class="note-item red">
+                    <div class="nt">🌀 이중 나선 구조 특징</div>
+                    Watson & Crick(1953) 발견.<br>
+                    <span class="red-underline" style="text-decoration-color:#ff4444;">두 가닥은 역평행(5′→3′ 방향이 서로 반대)</span>으로 배열됩니다.
+                </div>
+
+                <div class="note-item">
+                    <div class="nt">⚡ DNA vs RNA 차이</div>
+                    DNA: 타이민(T) 사용, 디옥시리보스<br>
+                    RNA: <span class="red-underline" style="text-decoration-color:#ff4444;">타이민(T) 대신 유라실(U) 사용</span>, 리보스
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ══════════ 상세 모달 ══════════ -->
+<div class="modal-bg" id="modalBg" onclick="bgClose(event)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-icon"  id="mIcon"></div>
+        <div class="modal-title" id="mTitle"></div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">🔬 기본 정보</div>
+            <div class="modal-grid" id="mGrid"></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">📖 고1 수준 쉬운 설명</div>
+            <div class="modal-desc" id="mDesc"></div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">📊 4가지 염기 비교표</div>
+            <table class="compare-table" id="mTable"></table>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+
+<!-- ══════════ JavaScript ══════════ -->
+<script>
+'use strict';
+
+// ────────────────────────────────────
+//  데이터
+// ────────────────────────────────────
+const COMP    = { A:'T', T:'A', G:'C', C:'G' };
+const NAMES   = { A:'아데닌', T:'타이민', G:'구아닌', C:'사이토신' };
+const FULL    = { A:'Adenine', T:'Thymine', G:'Guanine', C:'Cytosine' };
+const TYPES   = { A:'퓨린', T:'피리미딘', G:'퓨린', C:'피리미딘' };
+const RINGS   = { A:'이중 고리', T:'단일 고리', G:'이중 고리', C:'단일 고리' };
+const HBOND   = { A:2, T:2, G:3, C:3 };
+const FORMULA = { A:'C₅H₅N₅', T:'C₅H₆N₂O₂', G:'C₅H₅N₅O', C:'C₄H₅N₃O' };
+const MW      = { A:'135.1', T:'126.1', G:'151.1', C:'111.1' };
+
+const COL = {
+    A:{ main:'#ff6b6b', light:'#ff9090', dark:'#cc3333', text:'white' },
+    T:{ main:'#f5c518', light:'#ffe066', dark:'#c9960c', text:'#222'  },
+    G:{ main:'#0be881', light:'#5af5aa', dark:'#07a855', text:'#111'  },
+    C:{ main:'#4f6bff', light:'#8090ff', dark:'#3040cc', text:'white' }
+};
+
+// ── 염기별 쉬운 설명 (중요 문장 빨간 밑줄 포함) ──
+const EASY_DESC = {
+    A:`<p>🔴 <strong>아데닌(Adenine)</strong>은 DNA의 4가지 염기 중 하나로,
+        <span class="tag tag-purine">퓨린</span> 계열에 속합니다.</p>
+       <p><span class="red-underline">퓨린은 6각형 고리와 5각형 고리가 붙어 있는 이중 고리 구조</span>를 말해요.
+        마치 두 개의 방이 연결된 집처럼 생겼습니다!</p>
+       <p><span class="red-underline">아데닌은 반드시 타이민(T)과만 결합</span>하며,
+        이때 <span class="red-underline">수소결합 2개</span>가 형성됩니다.
+        ATP(에너지 분자)에도 들어 있는 매우 중요한 물질이에요.</p>`,
+
+    T:`<p>🟡 <strong>타이민(Thymine)</strong>은
+        <span class="red-underline">DNA에만 존재하는 특별한 염기</span>로,
+        <span class="tag tag-pyrim">피리미딘</span> 계열입니다.</p>
+       <p>피리미딘은 <span class="red-underline">6각형 고리 1개로 이루어진 단일 고리 구조</span>예요.
+        <span class="red-underline">RNA에는 타이민 대신 유라실(U)이 사용</span>됩니다!</p>
+       <p><span class="red-underline">타이민은 반드시 아데닌(A)과만 결합</span>하며,
+        <span class="red-underline">수소결합 2개</span>를 형성합니다.</p>`,
+
+    G:`<p>🟢 <strong>구아닌(Guanine)</strong>은
+        <span class="tag tag-purine">퓨린</span> 계열 염기로,
+        아데닌과 마찬가지로 <span class="red-underline">이중 고리 구조</span>입니다.</p>
+       <p><span class="red-underline">구아닌은 반드시 사이토신(C)과만 결합</span>하며,
+        이때 <span class="red-underline">수소결합 3개가 형성됩니다.</span></p>
+       <p><span class="red-underline">G-C 쌍은 A-T 쌍보다 수소결합이 1개 더 많아서
+        DNA를 더욱 안정적으로</span> 만드는 데 기여해요.
+        GC 함량이 높을수록 DNA가 높은 온도에서도 잘 견딥니다!</p>`,
+
+    C:`<p>🔵 <strong>사이토신(Cytosine)</strong>은
+        <span class="tag tag-pyrim">피리미딘</span> 계열로,
+        <span class="red-underline">단일 고리 구조</span>입니다.</p>
+       <p><span class="red-underline">사이토신은 반드시 구아닌(G)과만 결합</span>하며,
+        <span class="red-underline">수소결합 3개</span>를 형성합니다.</p>
+       <p>사이토신은 <span class="red-underline">유전자 발현 조절(메틸화)</span>에도
+        관여하는 특별한 염기예요.
+        DNA 복제 시 정확한 염기쌍 형성에 중요한 역할을 합니다.</p>`
+};
+
+// ── 퀴즈 데이터 ──
+const QUIZ_BANK = [
+    {
+        q:"아데닌(A)과 쌍을 이루는 상보적 염기는 무엇인가요?",
+        opts:["구아닌(G)","타이민(T)","사이토신(C)","유라실(U)"],
+        ans:1,
+        exp:"🔎 <strong><span class='red-underline'>A ↔ T (아데닌 ↔ 타이민)</span></strong> 입니다. 수소결합 2개가 형성됩니다. 유라실(U)은 RNA에서만 사용됩니다."
+    },
+    {
+        q:"G-C 염기쌍에서 형성되는 수소결합의 수는?",
+        opts:["1개","2개","3개","4개"],
+        ans:2,
+        exp:"🔎 <span class='red-underline'>G-C 쌍은 수소결합 3개</span>를 형성합니다. A-T 쌍(2개)보다 결합이 강해서 DNA를 더 안정적으로 만듭니다."
+    },
+    {
+        q:"다음 중 퓨린(Purine) 계열 염기를 모두 고른 것은?",
+        opts:["A, T","G, C","A, G","T, C"],
+        ans:2,
+        exp:"🔎 <span class='red-underline'>퓨린은 이중 고리 구조를 가집니다. A(아데닌)와 G(구아닌)이 퓨린</span>이고, T(타이민)와 C(사이토신)는 피리미딘입니다."
+    },
+    {
+        q:"샤가프(Chargaff)의 규칙에 따르면, DNA에서 A:T의 비율은?",
+        opts:["2:1","1:2","1:1","3:1"],
+        ans:2,
+        exp:"🔎 <span class='red-underline'>샤가프의 규칙: A=T, G=C.</span> 상보적 결합으로 인해 아데닌과 타이민의 수는 항상 같습니다."
+    },
+    {
+        q:"DNA의 이중 나선 구조를 발견한 과학자는?",
+        opts:["멘델(Mendel)","다윈(Darwin)","왓슨과 크릭(Watson & Crick)","파스퇴르(Pasteur)"],
+        ans:2,
+        exp:"🔎 <span class='red-underline'>왓슨(Watson)과 크릭(Crick)이 1953년에 DNA 이중 나선 구조를 발견</span>했습니다. 로절린드 프랭클린의 X선 사진도 큰 도움이 되었어요."
+    },
+    {
+        q:"GC 함량이 높을수록 DNA의 특성은?",
+        opts:["더 불안정해진다","더 안정적이 된다","변화 없다","복제 속도가 빨라진다"],
+        ans:1,
+        exp:"🔎 <span class='red-underline'>G-C 쌍은 수소결합 3개로 A-T(2개)보다 강합니다. GC 함량이 높을수록 DNA는 더 안정적</span>이 됩니다."
+    },
+    {
+        q:"DNA와 RNA를 구분하는 염기 차이는?",
+        opts:["DNA에는 A가 없다","RNA에는 T 대신 U(유라실)가 있다","RNA에는 G가 없다","DNA에는 C 대신 G가 있다"],
+        ans:1,
+        exp:"🔎 <span class='red-underline'>RNA에는 타이민(T) 대신 유라실(U)이 사용</span>됩니다. 또한 RNA의 당은 리보스, DNA의 당은 디옥시리보스입니다."
+    },
+    {
+        q:"DNA 두 가닥이 역평행(antiparallel)이라는 말의 뜻은?",
+        opts:["두 가닥이 같은 방향(5'→3')","두 가닥의 방향이 서로 반대","두 가닥의 길이가 다름","두 가닥의 색이 다름"],
+        ans:1,
+        exp:"🔎 <span class='red-underline'>역평행이란 한 가닥이 5'→3' 방향일 때, 반대 가닥은 3'→5' 방향으로 배열</span>된다는 뜻입니다."
+    },
+    {
+        q:"피리미딘(Pyrimidine) 계열 염기는?",
+        opts:["A, G","G, C","T, C","A, C"],
+        ans:2,
+        exp:"🔎 <span class='red-underline'>피리미딘은 단일 고리 구조를 가집니다. T(타이민)와 C(사이토신)가 피리미딘</span>이고, A와 G는 퓨린입니다."
+    },
+    {
+        q:"핵산을 이루는 기본 단위는?",
+        opts:["아미노산","뉴클레오타이드","포도당","지방산"],
+        ans:1,
+        exp:"🔎 <span class='red-underline'>DNA와 RNA의 기본 단위는 뉴클레오타이드(Nucleotide)</span>입니다. 뉴클레오타이드 = 인산 + 당(오탄당) + 염기로 구성됩니다."
+    }
+];
+
+// ────────────────────────────────────
+//  상태
+// ────────────────────────────────────
+let dnaSeq    = [];
+let selBase   = null;
+let animOn    = true;
+let helixAngle= 0;
+let raf;
+let flatView  = false;
+let qIdx      = -1;
+let qScore    = 0;
+let qTotal    = 0;
+
+// ────────────────────────────────────
+//  Canvas
+// ────────────────────────────────────
+const canvas = document.getElementById('dnaCanvas');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas(){
+    const w = document.getElementById('canvasWrap').clientWidth;
+    canvas.width  = w;
+    canvas.height = 450;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ────────────────────────────────────
+//  염기 선택 & 추가
+// ────────────────────────────────────
+function selectBase(b){
+    selBase = b;
+    ['A','T','G','C'].forEach(x =>
+        document.getElementById('btn-'+x).classList.toggle('sel', x===b)
+    );
+    const ind = document.getElementById('selInd');
+    ind.textContent = `✔ 선택됨: ${b} — ${NAMES[b]} (${TYPES[b]})`;
+    ind.className   = 'sel-indicator on';
+    ind.style.color = COL[b].main;
+
+    renderBaseDesc(b);
+    highlightRule(b);
+    addBase(b);
+}
+
+function renderBaseDesc(b){
+    const c = COL[b];
+    document.getElementById('baseDesc').innerHTML = `
+    <div class="desc-row">
+        <span class="desc-icon">🔤</span>
+        <div class="desc-text">
+            <strong>${NAMES[b]}</strong> (${FULL[b]})<br>
+            분류: <span class="hl-box" style="color:${c.main};">${TYPES[b]} — ${RINGS[b]}</span>
+        </div>
+    </div>
+    <div class="desc-row">
+        <span class="desc-icon">⚗️</span>
+        <div class="desc-text">
+            분자식: <strong>${FORMULA[b]}</strong> &nbsp;|&nbsp;
+            분자량: <strong>${MW[b]} g/mol</strong>
+        </div>
+    </div>
+    <div class="desc-row">
+        <span class="desc-icon">🔗</span>
+        <div class="desc-text">
+            결합 상대:
+            <strong style="color:${c.main};">${b}</strong> ↔
+            <strong style="color:${COL[COMP[b]].main};">${COMP[b]} (${NAMES[COMP[b]]})</strong><br>
+            수소결합:
+            <span class="red-underline" style="color:#c084fc;font-weight:bold;">${HBOND[b]}개</span>
+            ${HBOND[b]===3 ? '<span style="color:#ffd32a;font-size:0.9em;"> — G-C 쌍은 더 안정적!</span>':''}
+        </div>
+    </div>
+    <div class="desc-row">
+        <span class="desc-icon">💡</span>
+        <div class="desc-text">${getTip(b)}</div>
+    </div>`;
+}
+
+function getTip(b){
+    return {
+        A:"ATP 에너지 분자에도 포함된 중요한 염기예요!",
+        T:"<span class='red-underline-light'>DNA에만 있고 RNA에는 없어요 (RNA는 U 사용)</span>",
+        G:"<span class='red-underline-light'>GC 쌍이 많을수록 DNA가 열에 더 강해집니다!</span>",
+        C:"유전자 조절(메틸화)에 중요한 역할을 해요!"
+    }[b];
+}
+
+function highlightRule(b){
+    ['AT','TA','GC','CG'].forEach(id =>
+        document.getElementById('rule-'+id).classList.remove('lit')
+    );
+    const map = { A:'AT', T:'TA', G:'GC', C:'CG' };
+    document.getElementById('rule-'+map[b]).classList.add('lit');
+}
+
+function addBase(b){
+    if(dnaSeq.length >= 18){
+        showToast('⚠️ 최대 18쌍까지 표시됩니다. 초기화 후 계속하세요!');
+        return;
+    }
+    dnaSeq.push(b);
+    updateAll(b);
+    showToast(`✅ ${NAMES[b]}(${b}) 추가! → 상보 염기: ${COMP[b]} (${NAMES[COMP[b]]})`);
+}
+
+function addRandom(){
+    const arr = ['A','T','G','C'];
+    selectBase(arr[Math.floor(Math.random()*4)]);
+}
+
+function autoFill(){
+    ['A','T','G','C','G','A','T','C'].forEach((b,i) =>
+        setTimeout(() => selectBase(b), i*260)
+    );
+}
+
+function clearAll(){
+    dnaSeq = []; selBase = null;
+    ['A','T','G','C'].forEach(x => document.getElementById('btn-'+x).classList.remove('sel'));
+    const ind = document.getElementById('selInd');
+    ind.textContent = '← 위에서 염기를 선택하세요';
+    ind.className   = 'sel-indicator';
+    document.getElementById('baseDesc').innerHTML =
+        '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px 0;font-size:1em;">염기를 선택하면<br>자세한 설명이 나타납니다</div>';
+    ['AT','TA','GC','CG'].forEach(id => document.getElementById('rule-'+id).classList.remove('lit'));
+    document.getElementById('pairVisual').innerHTML =
+        '<p style="color:rgba(255,255,255,0.3);font-size:0.97em;text-align:center;padding:18px 0;">염기를 추가하면<br>쌍이 시각화됩니다</p>';
+    document.getElementById('bondExplain').style.display = 'none';
+    document.getElementById('stepDesc').innerHTML =
+        `왼쪽에서 염기(A, T, G, C 중 하나)를 클릭하면,
+        <span class="red-underline">상보적 염기가 자동으로 반대 가닥에 결합</span>하여
+        DNA 이중 나선이 만들어집니다.
+        <span class="red-underline">수소결합(H-bond)이 두 가닥을 연결</span>합니다.`;
+    updateStats();
+    showToast('🗑 초기화 완료!');
+}
+
+// ────────────────────────────────────
+//  전체 업데이트
+// ────────────────────────────────────
+function updateAll(lastBase){
+    updateStats();
+    updatePairVisual(lastBase);
+    updateStepDesc(lastBase);
+    updateProgress();
+}
+
+function updateProgress(){
+    const pct = Math.min((dnaSeq.length/18)*100, 100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressTxt').textContent  = `${dnaSeq.length} / 18 염기쌍`;
+}
+
+function updateStepDesc(b){
+    const comp  = COMP[b];
+    const bonds = HBOND[b];
+    const msgs = {
+        A:`<span class="red-underline">A(아데닌)가 추가</span>되었습니다!
+           반대 가닥에 <span class="red-underline">T(타이민)가 결합</span>했고,
+           두 염기 사이에 <span class="red-underline">수소결합 2개</span>가 형성되었습니다.
+           아데닌은 <strong>퓨린(이중 고리)</strong> 계열이에요.`,
+        T:`<span class="red-underline">T(타이민)가 추가</span>되었습니다!
+           반대 가닥에 <span class="red-underline">A(아데닌)가 결합</span>했고,
+           <span class="red-underline">수소결합 2개</span>가 형성됩니다.
+           <span class="red-underline-light">타이민은 DNA에만 있고 RNA에는 없어요!</span>`,
+        G:`<span class="red-underline">G(구아닌)가 추가</span>되었습니다!
+           반대 가닥에 <span class="red-underline">C(사이토신)가 결합</span>했고,
+           <span class="red-underline">수소결합 3개</span>가 형성됩니다.
+           <span class="red-underline-light">G-C 쌍은 A-T보다 결합이 더 강해서 DNA를 안정적으로 만들어요!</span>`,
+        C:`<span class="red-underline">C(사이토신)가 추가</span>되었습니다!
+           반대 가닥에 <span class="red-underline">G(구아닌)가 결합</span>했고,
+           <span class="red-underline">수소결합 3개</span>가 형성됩니다.
+           사이토신은 <strong>피리미딘(단일 고리)</strong> 계열이에요.`
+    };
+    document.getElementById('stepDesc').innerHTML = msgs[b];
+}
+
+// ────────────────────────────────────
+//  염기쌍 시각화
+// ────────────────────────────────────
+function updatePairVisual(b){
+    const comp  = COMP[b];
+    const bonds = HBOND[b];
+    const bc = COL[b], cc = COL[comp];
+
+    let lines = '';
+    for(let i=0;i<bonds;i++) lines += `<div class="h-bond-line"></div>`;
+
+    document.getElementById('pairVisual').innerHTML = `
+        <div class="pair-row">
+            <div class="pair-base"
+                style="background:linear-gradient(135deg,${bc.light},${bc.dark});
+                       color:${bc.text};
+                       box-shadow:0 0 22px ${bc.main}77;">
+                ${b}
+            </div>
+            <div class="h-bonds-visual">${lines}</div>
+            <div class="pair-base"
+                style="background:linear-gradient(135deg,${cc.light},${cc.dark});
+                       color:${cc.text};
+                       box-shadow:0 0 22px ${cc.main}77;">
+                ${comp}
+            </div>
+        </div>
+        <div class="pair-label">
+            ${NAMES[b]} ↔ ${NAMES[comp]}<br>
+            <strong>수소결합 ${bonds}개</strong>
+            ${bonds===3 ? ' ⭐ (더 강한 결합!)' : ''}
+        </div>
+    `;
+
+    const expEl = document.getElementById('bondExplain');
+    expEl.style.display = 'block';
+    expEl.innerHTML = `
+        <div class="be-title">💡 수소결합이란?</div>
+        수소결합은 한 분자의 <strong>수소(H)</strong>가 다른 분자의
+        <span class="red-underline-light">전기음성도가 큰 원자(N, O)와 약한 인력으로 끌리는 결합</span>입니다.<br>
+        <span class="red-underline">${b}-${comp} 쌍은 수소결합 ${bonds}개</span>로 두 가닥을 연결합니다.
+        ${bonds===3 ? '<br><span class="red-underline-light">💪 3개의 수소결합은 2개보다 더 강해서 DNA를 안정적으로 유지합니다!</span>' : ''}
+    `;
+}
+
+// ────────────────────────────────────
+//  통계
+// ────────────────────────────────────
+function updateStats(){
+    const cnt = {A:0,T:0,G:0,C:0};
+    dnaSeq.forEach(b => cnt[b]++);
+    const tot = dnaSeq.length;
+    const gc  = tot>0 ? Math.round((cnt.G+cnt.C)/tot*100) : 0;
+
+    ['A','T','G','C'].forEach(b => document.getElementById('s-'+b).textContent = cnt[b]);
+    document.getElementById('s-tot').textContent = tot;
+    document.getElementById('s-gc').textContent  = gc+'%';
+
+    const topEl = document.getElementById('seqTop');
+    const botEl = document.getElementById('seqBot');
+    if(tot===0){
+        topEl.innerHTML = '—'; botEl.innerHTML = '—';
+    } else {
+        topEl.innerHTML = dnaSeq.map(b =>
+            `<span style="color:${COL[b].main};">${b}</span>`).join('');
+        botEl.innerHTML = dnaSeq.map(b =>
+            `<span style="color:${COL[COMP[b]].main};">${COMP[b]}</span>`).join('');
+    }
+
+    const chEl = document.getElementById('chargaff');
+    if(tot===0){
+        chEl.innerHTML = '— 염기를 추가하면 확인됩니다';
+        return;
+    }
+    const atOk = cnt.A===cnt.T, gcOk = cnt.G===cnt.C;
+    chEl.innerHTML = `
+        A(${cnt.A}) ${atOk?'=':'≠'} T(${cnt.T}) &nbsp;
+        <span style="color:${atOk?'#0be881':'#ff6b6b'};">
+            ${atOk?'✅ 일치':'⚠ 불일치'}
+        </span><br>
+        G(${cnt.G}) ${gcOk?'=':'≠'} C(${cnt.C}) &nbsp;
+        <span style="color:${gcOk?'#0be881':'#ff6b6b'};">
+            ${gcOk?'✅ 일치':'⚠ 불일치'}
+        </span><br>
+        <span style="color:rgba(255,255,255,0.4);font-size:0.9em;">
+            ※ 이중가닥 완성 시 A=T, G=C가 됩니다
+        </span>
+    `;
+}
+
+// ────────────────────────────────────
+//  Canvas 렌더
+// ────────────────────────────────────
+function toggleAnim(){
+    animOn = !animOn;
+    if(animOn) startDraw();
+    showToast(animOn ? '▶ 애니메이션 켜짐' : '⏸ 애니메이션 꺼짐');
+}
+function toggleView(){
+    flatView = !flatView;
+    showToast(flatView ? '📊 평면 구조 모드' : '🌀 이중 나선 모드');
+}
+
+function startDraw(){
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(drawFrame);
+}
+
+function drawFrame(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(animOn) helixAngle += 0.015;
+
+    const bg = ctx.createLinearGradient(0,0,0,canvas.height);
+    bg.addColorStop(0,'#080820'); bg.addColorStop(1,'#0c1e30');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    if(dnaSeq.length===0) drawEmptyHint();
+    else if(flatView)     drawFlat();
+    else                  drawHelix();
+
+    if(animOn) raf = requestAnimationFrame(drawFrame);
+}
+
+function drawEmptyHint(){
+    const W=canvas.width, H=canvas.height;
+    const pulse = 0.7+0.3*Math.sin(helixAngle*3);
+    ctx.save();
+    ctx.globalAlpha = pulse*0.22; ctx.strokeStyle='#00f5ff'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(W/2,H/2,72,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = pulse*0.1;
+    ctx.beginPath(); ctx.arc(W/2,H/2,105,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.font = '44px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.fillText('🧬',W/2,H/2-14);
+    ctx.font='bold 16px Malgun Gothic, Arial';
+    ctx.fillStyle='rgba(0,245,255,0.75)';
+    ctx.fillText('염기를 클릭하여 DNA를 만들어보세요!',W/2,H/2+42);
+    ctx.restore();
+}
+
+function drawHelix(){
+    const W=canvas.width, H=canvas.height;
+    const n=dnaSeq.length;
+    const mg=58, sx=(W-mg*2)/Math.max(n-1,1);
+    const cy=H/2, amp=82, freq=0.55;
+
+    labelDir(mg,   cy-amp-40, "5′", '#00f5ff');
+    labelDir(W-mg, cy-amp-40, "3′", '#ff6b9d');
+    labelDir(mg,   cy+amp+44, "3′", '#ff6b9d');
+    labelDir(W-mg, cy+amp+44, "5′", '#00f5ff');
+
+    const s1=[], s2=[];
+    for(let i=0;i<n;i++){
+        const x=mg+i*sx, ph=i*freq+helixAngle;
+        s1.push({x, y:cy+amp*Math.sin(ph)});
+        s2.push({x, y:cy-amp*Math.sin(ph)});
+    }
+
+    drawBackbone(s1,'#00f5ff','#0077aa');
+    drawBackbone(s2,'#ff6b9d','#aa2244');
+
+    for(let i=0;i<n;i++){
+        const b=dnaSeq[i], c=COMP[b];
+        const p1=s1[i], p2=s2[i];
+        const cos=Math.cos(i*freq+helixAngle);
+        drawHBonds(p1.x,p1.y,p2.x,p2.y, HBOND[b], 0.25+0.65*Math.abs(cos));
+        drawBaseCircle(p1.x,p1.y,b,cos);
+        drawBaseCircle(p2.x,p2.y,c,cos);
+    }
+
+    if(n>0){
+        const lp1=s1[n-1], lp2=s2[n-1];
+        const midY=(lp1.y+lp2.y)/2;
+        const rad=Math.abs(lp1.y-lp2.y)/2+26;
+        ctx.save();
+        ctx.strokeStyle='rgba(255,255,255,0.55)';
+        ctx.lineWidth=2; ctx.setLineDash([5,5]);
+        ctx.shadowColor='white'; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(lp1.x,midY,rad,0,Math.PI*2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(255,255,255,0.55)';
+        ctx.font='12px Malgun Gothic, Arial'; ctx.textAlign='center';
+        ctx.fillText('방금 추가!',lp1.x,midY-rad-8);
+        ctx.restore();
+    }
+}
+
+function drawFlat(){
+    const W=canvas.width, H=canvas.height;
+    const n=dnaSeq.length;
+    const stepX=Math.min(66,(W-86)/Math.max(n,1));
+    const cx=W/2, sx=cx-((n-1)*stepX)/2;
+    const cy=H/2, gap=82;
+
+    labelDir(sx-34,  cy-gap, "5′", '#00f5ff');
+    labelDir(sx+(n-1)*stepX+34, cy-gap, "3′", '#00f5ff');
+    labelDir(sx-34,  cy+gap, "3′", '#ff6b9d');
+    labelDir(sx+(n-1)*stepX+34, cy+gap, "5′", '#ff6b9d');
+
+    if(n>=2){
+        ctx.save();
+        ctx.lineWidth=5; ctx.lineCap='round';
+        ctx.strokeStyle='rgba(0,245,255,0.5)';
+        ctx.shadowColor='#00f5ff'; ctx.shadowBlur=9;
+        ctx.beginPath(); ctx.moveTo(sx,cy-gap);
+        for(let i=1;i<n;i++) ctx.lineTo(sx+i*stepX,cy-gap);
+        ctx.stroke();
+        ctx.strokeStyle='rgba(255,107,157,0.5)';
+        ctx.shadowColor='#ff6b9d';
+        ctx.beginPath(); ctx.moveTo(sx,cy+gap);
+        for(let i=1;i<n;i++) ctx.lineTo(sx+i*stepX,cy+gap);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    for(let i=0;i<n;i++){
+        const b=dnaSeq[i], c=COMP[b], x=sx+i*stepX;
+        drawHBonds(x,cy-gap,x,cy+gap, HBOND[b], 0.8);
+        drawBaseCircle(x,cy-gap,b,1);
+        drawBaseCircle(x,cy+gap,c,1);
+    }
+}
+
+function drawBackbone(pts,c1,c2){
+    if(pts.length<2) return;
+    ctx.save();
+    const g=ctx.createLinearGradient(pts[0].x,0,pts[pts.length-1].x,0);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    ctx.strokeStyle=g; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.shadowColor=c1; ctx.shadowBlur=11;
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++){
+        const mx=(pts[i-1].x+pts[i].x)/2, my=(pts[i-1].y+pts[i].y)/2;
+        ctx.quadraticCurveTo(pts[i-1].x,pts[i-1].y,mx,my);
+    }
+    ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
+    ctx.stroke(); ctx.restore();
+}
+
+function drawHBonds(x1,y1,x2,y2,bonds,alpha){
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.strokeStyle=bonds===3?'#c084fc':'#00f5ff';
+    ctx.lineWidth=2; ctx.setLineDash([5,4]);
+    ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+}
+
+function drawBaseCircle(x,y,b,cosVal){
+    const c=COL[b], r=22;
+    ctx.save();
+    ctx.shadowColor=c.main; ctx.shadowBlur=18*(0.5+0.5*Math.abs(cosVal));
+    const rg=ctx.createRadialGradient(x-5,y-5,2,x,y,r);
+    rg.addColorStop(0,c.light); rg.addColorStop(1,c.dark);
+    ctx.fillStyle=rg;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.38)'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.shadowBlur=0; ctx.fillStyle=c.text;
+    ctx.font='bold 15px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(b,x,y); ctx.restore();
+}
+
+function labelDir(x,y,txt,col){
+    ctx.save();
+    ctx.fillStyle=col; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+    ctx.fillText(txt,x,y); ctx.restore();
+}
+
+// ────────────────────────────────────
+//  탭
+// ────────────────────────────────────
+function switchTab(id,btn){
+    document.querySelectorAll('.tab-body').forEach(el => el.classList.remove('on'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('on'));
+    document.getElementById('tab-'+id).classList.add('on');
+    btn.classList.add('on');
+}
+
+// ────────────────────────────────────
+//  퀴즈
+// ────────────────────────────────────
+function nextQuiz(){
+    let ni;
+    do { ni=Math.floor(Math.random()*QUIZ_BANK.length); } while(ni===qIdx && QUIZ_BANK.length>1);
+    qIdx = ni;
+    const q = QUIZ_BANK[qIdx];
+    document.getElementById('qText').textContent = q.q;
+    document.getElementById('qExp').style.display = 'none';
+
+    const optsEl = document.getElementById('qOpts');
+    optsEl.innerHTML = '';
+    q.opts.forEach((o,i)=>{
+        const btn = document.createElement('button');
+        btn.className = 'q-opt';
+        btn.textContent = o;
+        btn.onclick = () => answerQuiz(i,btn,q);
+        optsEl.appendChild(btn);
+    });
+}
+
+function answerQuiz(sel,btn,q){
+    qTotal++;
+    document.querySelectorAll('.q-opt').forEach(b => b.onclick=null);
+    const expEl = document.getElementById('qExp');
+    if(sel===q.ans){
+        btn.classList.add('correct');
+        qScore++;
+        showToast('🎉 정답!');
+    } else {
+        btn.classList.add('wrong');
+        document.querySelectorAll('.q-opt')[q.ans].classList.add('correct');
+        showToast('❌ 틀렸어요! 설명을 확인해보세요.');
+    }
+    document.getElementById('qScore').textContent = `점수: ${qScore} / ${qTotal}`;
+    expEl.innerHTML = q.exp;
+    expEl.style.display = 'block';
+}
+
+// ────────────────────────────────────
+//  모달
+// ────────────────────────────────────
+function openModal(){
+    const b = selBase||'A';
+    const c = COL[b];
+    const icons = {A:'🔴',T:'🟡',G:'🟢',C:'🔵'};
+
+    document.getElementById('mIcon').textContent = icons[b];
+    document.getElementById('mTitle').innerHTML  =
+        `<span style="color:${c.main}">${NAMES[b]}</span>
+         <span style="opacity:.5;font-size:.68em;">(${FULL[b]})</span>`;
+
+    document.getElementById('mGrid').innerHTML = `
+        <div class="modal-cell">
+            <div class="mc-label">분자식</div>
+            <div class="mc-val" style="color:${c.main}">${FORMULA[b]}</div>
+        </div>
+        <div class="modal-cell">
+            <div class="mc-label">분자량</div>
+            <div class="mc-val">${MW[b]} g/mol</div>
+        </div>
+        <div class="modal-cell">
+            <div class="mc-label">분류</div>
+            <div class="mc-val">${TYPES[b]}</div>
+        </div>
+        <div class="modal-cell">
+            <div class="mc-label">고리 구조</div>
+            <div class="mc-val">${RINGS[b]}</div>
+        </div>
+        <div class="modal-cell">
+            <div class="mc-label">결합 상대</div>
+            <div class="mc-val" style="color:${COL[COMP[b]].main}">
+                ${COMP[b]} (${NAMES[COMP[b]]})
+            </div>
+        </div>
+        <div class="modal-cell">
+            <div class="mc-label">수소결합 수</div>
+            <div class="mc-val" style="color:#c084fc">${HBOND[b]}개</div>
+        </div>
+    `;
+
+    document.getElementById('mDesc').innerHTML = EASY_DESC[b];
+
+    document.getElementById('mTable').innerHTML = `
+        <tr>
+            <th>염기</th><th>이름</th><th>분류</th><th>결합 상대</th><th>H결합</th>
+        </tr>
+        ${['A','T','G','C'].map(x=>`
+        <tr style="${x===b?'background:rgba(255,255,255,0.09);':''}">
+            <td><strong style="color:${COL[x].main}">${x}</strong></td>
+            <td>${NAMES[x]}</td>
+            <td>${TYPES[x]}</td>
+            <td style="color:${COL[COMP[x]].main}">${COMP[x]}</td>
+            <td style="color:#c084fc">${HBOND[x]}개</td>
+        </tr>`).join('')}
+    `;
+
+    document.getElementById('modalBg').classList.add('show');
+}
+
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+function bgClose(e){ if(e.target===document.getElementById('modalBg')) closeModal(); }
+
+// ────────────────────────────────────
+//  토스트
+// ────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ────────────────────────────────────
+//  시작
+// ────────────────────────────────────
+startDraw();
+</script>
+</body>
+</html>
